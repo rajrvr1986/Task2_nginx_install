@@ -12,7 +12,7 @@
        shell: /bin/bash
        password: "{{ 'password' | password_hash('sha256') }}"
 
-   - name: Copying contents to web's home dir
+   - name: Copying contents to user home dir
      ansible.builtin.copy:
        src: beginner-html-site-styled/ 
        dest: /home/web/
@@ -20,19 +20,19 @@
        group: web
        mode: 0644
    
-   - name: nginx intallation
+   - name: nginx intallation begin
      become: yes
      ansible.builtin.apt: 
        name: nginx
        state: latest
        update_cache: yes
 
-   - name: start nginx service
+   - name: service nginx start 
      ansible.builtin.service:
        name: nginx 
        state: started 
 
-   - name: nginx config copying
+   - name: Using custom nginx config
      ansible.builtin.copy:
        src: nginx.conf
        dest: /etc/nginx/nginx.conf 
@@ -41,7 +41,7 @@
        group: root
      notify: Restart Nginx Service
    
-   - name: Change webroot from varwwhtml to homeweb
+   - name: Change webroot from default to web
      replace:
        path: /etc/nginx/sites-available/default 
        regexp: 'root /var/www/html'
@@ -49,7 +49,7 @@
      notify: Restart Nginx Service
 
   handlers:
-   - name: Restart Nginx Service
+   - name: defining handlers
      ansible.builtin.service:
        name: nginx
        state: restarted
