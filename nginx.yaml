@@ -1,0 +1,55 @@
+---
+- name: Ansible Task 2
+  become: yes
+  gather_facts: false
+  hosts: Webserver 
+  tasks:
+
+   - name: Create User Web
+     ansible.builtin.user:
+       name: web
+       uid: 2010
+       shell: /bin/bash
+       password: "{{ 'password' | password_hash('sha256') }}"
+
+   - name: Copying contents to web's home dir
+     ansible.builtin.copy:
+       src: beginner-html-site-styled/ 
+       dest: /home/web/
+       owner: web
+       group: web
+       mode: 0644
+   
+   - name: nginx intallation
+     become: yes
+     ansible.builtin.apt: 
+       name: nginx
+       state: latest
+       update_cache: yes
+
+   - name: start nginx service
+     ansible.builtin.service:
+       name: nginx 
+       state: started 
+
+   - name: nginx config copying
+     ansible.builtin.copy:
+       src: nginx.conf
+       dest: /etc/nginx/nginx.conf 
+       mode: 0644
+       owner: root
+       group: root
+     notify: Restart Nginx Service
+   
+   - name: Change webroot from varwwhtml to homeweb
+     replace:
+       path: /etc/nginx/sites-available/default 
+       regexp: 'root /var/www/html'
+       replace: "root /home/web"
+     notify: Restart Nginx Service
+
+  handlers:
+   - name: Restart Nginx Service
+     ansible.builtin.service:
+       name: nginx
+       state: restarted
